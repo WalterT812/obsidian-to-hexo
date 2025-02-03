@@ -101,75 +101,40 @@ export default class BlogSyncPlugin extends Plugin {
             this.app.workspace.on('editor-drop', this.handleDrop.bind(this))
         );
 
-        // [测试代码开始] - 发布时删除
-        this.addCommand({
-            id: 'test-image-preview',
-            name: '测试图片预览',
-            callback: () => this.testImagePreview()
-        });
-        // [测试代码结束]
 
         // 注册 Markdown 后处理器
         this.registerMarkdownPostProcessor((el, ctx) => {
-            console.log('=== Markdown 处理器开始 ===');
-            console.log('当前元素类型:', el.tagName);
-            console.log('当前元素内容:', el.innerHTML);
-            console.log('上下文:', {
-                sourcePath: ctx.sourcePath,
-                frontmatter: ctx.frontmatter
-            });
 
             // 检查是否启用了预览功能
             if (!this.settings.blogEditMode || !this.settings.enableImagePreview) {
-                console.log('预览功能未启用:', {
-                    blogEditMode: this.settings.blogEditMode,
-                    enableImagePreview: this.settings.enableImagePreview
-                });
                 return;
             }
 
             // 获取当前文件的 TFile
             const currentFile = ctx.sourcePath ? this.app.vault.getAbstractFileByPath(ctx.sourcePath) : null;
             if (!currentFile) {
-                console.log('无法获取当前文件');
                 return;
             }
 
             // 检查是否是 Markdown 文件
             if (!(currentFile instanceof TFile) || currentFile.extension !== 'md') {
-                console.log('不是 Markdown 文件:', currentFile);
                 return;
             }
 
             const codeBlocks = el.querySelectorAll('p');
-            console.log('找到段落数:', codeBlocks.length);
 
             codeBlocks.forEach((block, index) => {
                 const text = block.textContent;
-                console.log(`检查段落 ${index + 1}:`, {
-                    text,
-                    html: block.innerHTML
-                });
 
                 if (!text) {
-                    console.log(`段落 ${index + 1} 为空`);
                     return;
                 }
 
                 const matches = Array.from(text.matchAll(this.IMAGE_REGEX));
-                console.log(`段落 ${index + 1} 的匹配结果:`, {
-                    regex: this.IMAGE_REGEX.source,
-                    matches: matches.map(m => m[0])
-                });
 
                 if (matches.length > 0) {
                     matches.forEach((match, matchIndex) => {
                         const [fullMatch, fileName, caption] = match;
-                        console.log(`处理第 ${matchIndex + 1} 个图片:`, {
-                            fullMatch,
-                            fileName,
-                            caption
-                        });
                         
                         // 创建容器
                         const container = el.createEl('div', {
@@ -183,12 +148,6 @@ export default class BlogSyncPlugin extends Plugin {
                         // 使用正确的 vault 路径
                         const imagePath = `2-BlogResources/Images/test/${fileName}`;
                         const imageFile = this.app.vault.getAbstractFileByPath(imagePath);
-                        
-                        console.log('图片路径:', {
-                            imagePath,
-                            exists: !!imageFile,
-                            vaultPath: this.app.vault.getName()
-                        });
 
                         if (imageFile instanceof TFile) {
                             // 使用 Obsidian 的 createEl 创建图片
@@ -199,7 +158,6 @@ export default class BlogSyncPlugin extends Plugin {
                                     'data-path': imagePath
                                 }
                             });
-                            console.log('图片元素已创建');
                         } else {
                             // 使用 vault 相对路径
                             const img = container.createEl('img', {
@@ -208,7 +166,6 @@ export default class BlogSyncPlugin extends Plugin {
                                     alt: caption
                                 }
                             });
-                            console.log('使用完整路径创建图片元素');
                         }
                         
                         // 替换原始文本
@@ -231,8 +188,6 @@ export default class BlogSyncPlugin extends Plugin {
                     });
                 }
             });
-
-            console.log('=== Markdown 处理器结束 ===');
         });
 
         // 强制刷新当前视图
@@ -248,12 +203,6 @@ export default class BlogSyncPlugin extends Plugin {
             })
         );
 
-        // 监听文件打开
-        this.registerEvent(
-            this.app.workspace.on('file-open', () => {
-                console.log('文件被打开，重新处理 Markdown');
-            })
-        );
     }
 
     async loadSettings() {
@@ -316,7 +265,6 @@ export default class BlogSyncPlugin extends Plugin {
             const targetPath = path.join(this.settings.hexoPostPath, fileName);
             
             fs.copyFileSync(sourcePath, targetPath);
-            console.log(`已复制文件：${fileName} 到 ${targetPath}`);
         }
     }
 
@@ -356,7 +304,6 @@ export default class BlogSyncPlugin extends Plugin {
             const targetPath = path.join(targetFolder, fileName);
 
             fs.copyFileSync(sourcePath, targetPath);
-            console.log(`已复制图片：${relativePath} 到 ${targetPath}`);
         }
     }
 
@@ -381,7 +328,6 @@ export default class BlogSyncPlugin extends Plugin {
                     if (stderr) {
                         console.error(`标准错误: ${stderr}`);
                     }
-                    console.log(`输出: ${stdout}`);
                     resolve(stdout);
                 }
             );
@@ -399,10 +345,6 @@ export default class BlogSyncPlugin extends Plugin {
 
     // 更新刷新按钮状态
     private updateRefreshButton() {
-        console.log('更新刷新按钮状态:', {
-            blogEditMode: this.settings.blogEditMode,
-            enableImagePreview: this.settings.enableImagePreview
-        });
         this.refreshButton.style.display = 
             (this.settings.blogEditMode && this.settings.enableImagePreview) 
                 ? 'block' 
@@ -411,7 +353,6 @@ export default class BlogSyncPlugin extends Plugin {
 
     // 刷新图片预览
     private refreshImagePreviews() {
-        console.log('手动刷新图片预览');
         if (!this.settings.blogEditMode || !this.settings.enableImagePreview) {
             new Notice('请先开启博客编辑模式和图片预览功能');
             return;
@@ -420,17 +361,14 @@ export default class BlogSyncPlugin extends Plugin {
         // 获取当前活动的编辑器视图
         const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (!activeView) {
-            console.log('没有活动的 Markdown 视图');
             return;
         }
-        console.log('当前活动文件:', activeView.file?.path);
 
         this.app.workspace.trigger('file-open');
         
         // 强制重新渲染
         setTimeout(() => {
             activeView.previewMode.rerender(true);
-            console.log('已触发重新渲染');
         }, 100);
 
         new Notice('已刷新图片预览');
@@ -596,67 +534,6 @@ export default class BlogSyncPlugin extends Plugin {
         );
     }
 
-    // [测试代码开始] - 发布时删除
-    private testImagePreview() {
-        console.log('开始测试图片预览');
-        
-        // 使用 Obsidian 的 TFile API
-        const testPath = '2-BlogResources/Images/test/test2.webp';
-        console.log('测试图片路径:', testPath);
-        
-        // 获取资源路径
-        const resourcePath = this.app.vault.adapter.getResourcePath(testPath);
-        console.log('资源路径:', resourcePath);
-        
-        // 创建测试容器
-        const testContainer = document.createElement('div');
-        testContainer.style.position = 'fixed';
-        testContainer.style.top = '50%';
-        testContainer.style.left = '50%';
-        testContainer.style.transform = 'translate(-50%, -50%)';
-        testContainer.style.background = 'var(--background-primary)';
-        testContainer.style.padding = '20px';
-        testContainer.style.borderRadius = '10px';
-        testContainer.style.boxShadow = '0 0 10px rgba(0,0,0,0.3)';
-        testContainer.style.zIndex = '1000';
-        
-        // 添加关闭按钮
-        const closeButton = document.createElement('button');
-        closeButton.textContent = '关闭测试';
-        closeButton.onclick = () => testContainer.remove();
-        testContainer.appendChild(closeButton);
-        
-        // 添加图片
-        const img = document.createElement('img');
-        img.src = resourcePath;
-        img.alt = '测试图片';
-        img.style.maxWidth = '500px';
-        img.style.marginTop = '10px';
-        img.onerror = () => {
-            console.error('图片加载失败:', resourcePath);
-            img.style.border = '2px solid red';
-            img.style.padding = '10px';
-            img.style.display = 'block';
-            const errorText = document.createElement('div');
-            errorText.style.color = 'red';
-            errorText.textContent = '图片加载失败';
-            img.parentElement?.insertBefore(errorText, img);
-        };
-        testContainer.appendChild(img);
-        
-        // 添加路径信息
-        const pathInfo = document.createElement('pre');
-        pathInfo.textContent = JSON.stringify({
-            testPath,
-            resourcePath,
-            vaultPath: this.app.vault.getName()
-        }, null, 2);
-        testContainer.appendChild(pathInfo);
-        
-        // 添加到文档
-        document.body.appendChild(testContainer);
-    }
-    // [测试代码结束]
 }
 
 class BlogSyncSettingTab extends PluginSettingTab {

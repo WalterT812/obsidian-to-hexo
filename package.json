@@ -1,6 +1,6 @@
 {
-  "name": "obsidiantohexo",
-  "version": "1.0.0",
+  "name": "obsidian-to-hexo",
+  "version": "0.2.0",
   "main": "index.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
@@ -10,7 +10,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "An Obsidian plugin for syncing notes to Hexo blog",
   "devDependencies": {
     "@types/node": "^22.13.0",
     "builtin-modules": "^4.0.0",
