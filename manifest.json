@@ -1,0 +1,9 @@
+{
+    "id": "obsidian-to-hexo",
+    "name": "Obsidian to Hexo",
+    "version": "0.2.0",
+    "minAppVersion": "0.15.0",
+    "description": "自动同步 Markdown 文件和图片到 Hexo 博客并部署",
+    "author": "Walter Tang",
+    "isDesktopOnly": true
+} 

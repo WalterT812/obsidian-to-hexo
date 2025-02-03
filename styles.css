@@ -1,0 +1,82 @@
+.blog-edit-mode-active {
+    color: var(--text-accent);
+    font-weight: bold;
+}
+
+.status-bar-item.plugin-obsidian-to-hexo {
+    cursor: pointer;
+}
+
+.blog-image-preview {
+    max-width: 100%;
+    margin: 10px 0;
+}
+
+.blog-image-preview img {
+    max-width: 100%;
+    height: auto;
+}
+
+.blog-image-preview .caption {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9em;
+    margin-top: 5px;
+}
+
+.blog-refresh-button {
+    cursor: pointer;
+    padding: 0 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.blog-refresh-button:hover {
+    background-color: var(--interactive-hover);
+}
+
+/* 添加链接样式 */
+.markdown-source-view.mod-cm6 .cm-line:has(.blog-image-tag) {
+    color: var(--link-color);
+    text-decoration: none;
+}
+
+/* 隐藏原始标签文本 */
+.markdown-preview-view p[dir="auto"] {
+    display: none;
+}
+
+/* 图片预览容器样式 */
+.blog-image-preview {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: block;
+    margin: 20px auto;
+}
+
+.blog-image-preview img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+/* 编辑模式下的图片标签样式 */
+.cm-line .blog-image-tag {
+    color: var(--link-color);
+    background-color: var(--background-modifier-border);
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    display: inline-block;
+}
+
+/* 源码模式下的标签样式 */
+.markdown-source-view.mod-cm6 .cm-line:has(.blog-image-tag) {
+    color: var(--text-normal);
+}
+
+/* 预览模式下的标签隐藏 */
+.markdown-preview-view .blog-image-tag {
+    display: none;
+}
