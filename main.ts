@@ -35,10 +35,16 @@ export default class BlogSyncPlugin extends Plugin {
     settings: BlogSyncSettings = DEFAULT_SETTINGS;
     statusBarItem: HTMLElement;
     refreshButton: HTMLElement;
-    private readonly CURRENT_VERSION = '0.1.0';
+    private readonly CURRENT_VERSION = '0.3.0';
     private readonly DATA_VERSION_KEY = 'version';
     private readonly CHANGE_LOG = {
-        '0.1.0': [
+        '0.3.0': [
+            '添加从 Hexo 同步到 Obsidian 的功能',
+            '支持 Markdown 文件反向同步',
+            '支持图片文件反向同步',
+            '添加文件更新时间检查'
+        ],
+        '0.2.0': [
             '初始版本',
             '支持 Markdown 和图片同步',
             '支持图片转换为 WebP',
@@ -80,6 +86,13 @@ export default class BlogSyncPlugin extends Plugin {
             id: 'sync-blog',
             name: '同步博客文件并部署',
             callback: () => this.syncAndDeploy()
+        });
+
+        // 添加反向同步命令
+        this.addCommand({
+            id: 'sync-from-hexo',
+            name: '从 Hexo 同步到 Obsidian',
+            callback: () => this.syncFromHexo()
         });
 
         // 添加切换博客编辑模式的命令
@@ -228,6 +241,91 @@ export default class BlogSyncPlugin extends Plugin {
         } catch (error: any) {
             new Notice(`错误：${error.message}`);
             console.error(error);
+        }
+    }
+
+    // 添加反向同步方法
+    private async syncFromHexo() {
+        try {
+            // 同步 Markdown 文件
+            await this.syncMarkdownFromHexo();
+            
+            // 同步图片文件
+            await this.syncImagesFromHexo();
+            
+            new Notice('从 Hexo 同步到 Obsidian 成功！');
+        } catch (error: any) {
+            new Notice(`错误：${error.message}`);
+            console.error(error);
+        }
+    }
+
+    // 从 Hexo 同步 Markdown 文件
+    private async syncMarkdownFromHexo() {
+        if (!fs.existsSync(this.settings.hexoPostPath)) {
+            throw new Error('Hexo _posts 路径不存在');
+        }
+        if (!fs.existsSync(this.settings.markdownSourcePath)) {
+            fs.mkdirSync(this.settings.markdownSourcePath, { recursive: true });
+        }
+
+        const hexoFiles = fs.readdirSync(this.settings.hexoPostPath)
+            .filter(file => file.endsWith('.md'));
+
+        for (const fileName of hexoFiles) {
+            const sourcePath = path.join(this.settings.hexoPostPath, fileName);
+            const targetPath = path.join(this.settings.markdownSourcePath, fileName);
+
+            // 检查文件是否已存在且更新时间更新
+            if (!fs.existsSync(targetPath) || 
+                fs.statSync(sourcePath).mtime > fs.statSync(targetPath).mtime) {
+                fs.copyFileSync(sourcePath, targetPath);
+                console.log(`已复制文件：${fileName} 到 Obsidian`);
+            }
+        }
+    }
+
+    // 从 Hexo 同步图片文件
+    private async syncImagesFromHexo() {
+        const hexoImagePath = path.join(this.settings.hexoRootPath, 'source', 'image', 'posts');
+        if (!fs.existsSync(hexoImagePath)) {
+            throw new Error('Hexo 图片路径不存在');
+        }
+
+        // 递归获取所有图片文件
+        const getAllImages = (dirPath: string, arrayOfFiles: string[] = []): string[] => {
+            const files = fs.readdirSync(dirPath);
+
+            files.forEach((file) => {
+                const fullPath = path.join(dirPath, file);
+                if (fs.statSync(fullPath).isDirectory()) {
+                    arrayOfFiles = getAllImages(fullPath, arrayOfFiles);
+                } else if (file.match(/\.(jpg|jpeg|png|gif|svg|webp)$/i)) {
+                    arrayOfFiles.push(fullPath);
+                }
+            });
+
+            return arrayOfFiles;
+        };
+
+        const imageFiles = getAllImages(hexoImagePath);
+
+        for (const sourcePath of imageFiles) {
+            const relativePath = path.relative(hexoImagePath, sourcePath);
+            const [postName, fileName] = relativePath.split(path.sep);
+            
+            // 创建目标文件夹
+            const targetFolder = path.join(this.settings.imageSourcePath, postName);
+            fs.mkdirSync(targetFolder, { recursive: true });
+            
+            const targetPath = path.join(targetFolder, fileName);
+
+            // 检查文件是否已存在且更新时间更新
+            if (!fs.existsSync(targetPath) || 
+                fs.statSync(sourcePath).mtime > fs.statSync(targetPath).mtime) {
+                fs.copyFileSync(sourcePath, targetPath);
+                console.log(`已复制图片：${relativePath} 到 Obsidian`);
+            }
         }
     }
 
